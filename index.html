@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="概念庫">
+<meta name="theme-color" content="#16171B">
+<title>哲學概念庫</title>
+<style>
+  :root{
+    --bg: #16171B; --panel: #1E2025; --panel-hi: #24262C; --line: #2C2E34;
+    --ink: #E8E4D9; --ink-dim: #9B9A92; --ink-faint: #6C6B65;
+    --brass: #C9A227; --stamp: #B0483A;
+    --r-tension: #e05252; --r-resonance: #52b0e0; --r-critique: #e08852;
+    --r-inheritance: #52e07a; --r-dialogue: #a052e0;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Helvetica Neue", sans-serif;
+    --serif: ui-serif, Georgia, "Songti TC", serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  body{ padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); min-height: 100vh; }
+  ::selection{ background: var(--brass); color:#16171B; }
+
+  header{ position: sticky; top:0; z-index: 10; background: rgba(22,23,27,0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 12px 16px 10px; }
+  .titlebar{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 10px; }
+  .titlebar h1{ font-family: var(--serif); font-size: 19px; font-weight: 600; letter-spacing: 0.02em; margin:0; }
+  .titlebar .count{ font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+
+  .tabs{ display:flex; gap:6px; margin-bottom:10px; background:var(--panel); border-radius:10px; padding:3px; }
+  .tab{ flex:1; text-align:center; padding:7px 0; font-size:13.5px; color:var(--ink-dim); border-radius:8px; cursor:pointer; }
+  .tab.active{ background: var(--brass); color:#16171B; font-weight:600; }
+
+  .search-row{ position: relative; margin-bottom: 8px; }
+  .search-row input{ width:100%; background: var(--panel); border:1px solid var(--line); color: var(--ink); font-size:15px; padding: 10px 36px 10px 14px; border-radius: 10px; font-family: var(--sans); }
+  .search-row input:focus{ outline: none; border-color: var(--brass); }
+  .search-row input::placeholder{ color: var(--ink-faint); }
+  .search-row .clear-btn{ position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--ink-faint); font-size:18px; padding:4px 6px; display:none; cursor:pointer; }
+  .search-row .clear-btn.show{ display:block; }
+
+  .action-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .action-btn{ flex:1 1 auto; min-width:80px; display:flex; align-items:center; justify-content:center; gap:5px; font-size:13px; padding: 8px 10px; border-radius:9px; border:1px solid var(--line); background: var(--panel); color: var(--ink-dim); cursor:pointer; white-space:nowrap; }
+  .action-btn.active{ border-color: var(--brass); color: var(--brass); }
+  .action-btn .badge{ background:var(--brass); color:#16171B; font-size:10px; font-weight:700; border-radius:999px; padding:1px 5px; }
+
+  .active-pills{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .active-pills:empty{ display:none; margin-top:0; }
+  .pill{ display:flex; align-items:center; gap:5px; font-size:12px; background: var(--panel-hi); border:1px solid var(--brass); color:var(--brass); padding:4px 8px 4px 10px; border-radius:999px; cursor:pointer; }
+
+  main{ padding: 12px 14px 60px; max-width: 720px; margin: 0 auto; }
+
+  .card{ background: var(--panel); border:1px solid var(--line); border-radius: 12px; margin-bottom: 10px; overflow:hidden; scroll-margin-top: 230px; transition: border-color .6s, box-shadow .6s; }
+  .card.flash{ border-color: var(--brass); box-shadow: 0 0 0 1px var(--brass); }
+  .card-head{ display:flex; padding: 13px 14px; cursor:pointer; gap:10px; }
+  .card-head:active{ background: var(--panel-hi); }
+  .card-tab{ width:3px; border-radius:2px; flex:0 0 3px; }
+  .card-main{ flex:1; min-width:0; }
+  .card-name-row{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .card-name{ font-size:16.5px; font-weight:600; color:var(--ink); }
+  .card-orig{ font-family: var(--serif); font-size:13px; color: var(--brass); font-style:italic; }
+  .card-sub{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
+  .card-def{ font-size:13.5px; color:var(--ink-dim); margin-top:6px; line-height:1.5; }
+  .card-stamp{ flex:0 0 auto; align-self:flex-start; font-family: var(--mono); font-size:10px; color:var(--ink-faint); border:1px dashed var(--ink-faint); border-radius:5px; padding:3px 6px; white-space:nowrap; text-align:right; }
+  .card-stamp .touched{ margin-top:3px; color:var(--ink-faint); }
+  .card-tags{ display:flex; gap:5px; flex-wrap:wrap; margin-top:8px; }
+  .tag-pill{ font-size:11px; padding:2px 8px; border-radius:999px; background: var(--panel-hi); color:var(--ink-dim); border:1px solid var(--line); }
+  .tag-pill.tradition{ color: var(--brass); border-color: var(--brass); }
+
+  .card-body{ display:none; padding: 0 16px 16px; border-top:1px solid var(--line); }
+  .card.open .card-body{ display:block; }
+  .card.open .chev{ transform: rotate(90deg); }
+  .chev{ color: var(--ink-faint); font-size:14px; transition: transform .15s; align-self:center; }
+
+  .sec{ margin-top:14px; }
+  .sec h3{ font-family: var(--mono); font-size:11px; letter-spacing:0.08em; color: var(--brass); text-transform:uppercase; margin:0 0 6px; }
+  .sec p{ margin:0 0 10px; font-size:14.5px; line-height:1.8; color: var(--ink); }
+  .sec p:last-child{ margin-bottom:0; }
+  .sec strong{ color: var(--brass); font-weight:600; }
+  .sec ul{ margin:0; padding-left:18px; }
+  .sec li{ font-size:14px; line-height:1.75; color: var(--ink); margin-bottom:5px; }
+
+  .rel{ display:flex; gap:8px; align-items:flex-start; margin-bottom:9px; font-size:13.5px; line-height:1.65; }
+  .rel:last-child{ margin-bottom:0; }
+  .rel-dot{ width:8px; height:8px; border-radius:50%; margin-top:6px; flex:0 0 8px; }
+  .rel-type{ font-weight:600; margin-right:4px; }
+  .rel-c-tension .rel-dot,.rel-c-tension .rel-type{ color: var(--r-tension); } .rel-c-tension .rel-dot{ background: var(--r-tension); }
+  .rel-c-resonance .rel-dot,.rel-c-resonance .rel-type{ color: var(--r-resonance); } .rel-c-resonance .rel-dot{ background: var(--r-resonance); }
+  .rel-c-critique .rel-dot,.rel-c-critique .rel-type{ color: var(--r-critique); } .rel-c-critique .rel-dot{ background: var(--r-critique); }
+  .rel-c-inheritance .rel-dot,.rel-c-inheritance .rel-type{ color: var(--r-inheritance); } .rel-c-inheritance .rel-dot{ background: var(--r-inheritance); }
+  .rel-c-dialogue .rel-dot,.rel-c-dialogue .rel-type{ color: var(--r-dialogue); } .rel-c-dialogue .rel-dot{ background: var(--r-dialogue); }
+  .rel-link{ color: inherit; text-decoration: underline; text-decoration-color: currentColor; text-underline-offset: 2px; cursor:pointer; font-weight:600; }
+  .rel-link:active{ opacity:0.7; }
+  .rel-jump-icon{ font-size:11px; margin-left:2px; }
+
+  textarea.reflection{ width:100%; min-height:74px; background: var(--panel-hi); border:1px solid var(--line); border-radius:8px; color: var(--ink); font-family: var(--sans); font-size:14px; padding:10px; line-height:1.6; resize: vertical; }
+  textarea.reflection:focus{ outline:none; border-color:var(--brass); }
+  .save-state{ font-size:11px; color: var(--ink-faint); margin-top:5px; font-family: var(--mono); }
+
+  .status-row{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .status-btn{ font-size:12px; padding:5px 10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--ink-dim); cursor:pointer; }
+  .status-btn.active{ background: var(--stamp); border-color: var(--stamp); color:#F5EFE6; }
+  .read-btn{ font-size:12px; padding:5px 10px; border-radius:8px; border:1px solid var(--brass); background:transparent; color:var(--brass); cursor:pointer; margin-top:8px; }
+  .read-btn:active{ background: var(--brass); color:#16171B; }
+
+  .empty{ text-align:center; padding: 60px 20px; color: var(--ink-faint); font-size:14px; line-height:1.8; }
+
+  footer{ max-width:720px; margin:0 auto; padding: 10px 16px 30px; display:flex; justify-content:space-between; align-items:center; }
+  .export-btn{ font-size:12.5px; color: var(--ink-dim); background:none; border:1px solid var(--line); border-radius:8px; padding:8px 12px; cursor:pointer; }
+  .export-btn:active{ background: var(--panel-hi); }
+  .footer-note{ font-size:11px; color: var(--ink-faint); font-family: var(--mono); }
+
+  .modal-mask{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:50; align-items:flex-end; }
+  .modal-mask.show{ display:flex; }
+  .modal{ background: var(--panel); border-radius: 16px 16px 0 0; width:100%; max-height:82vh; overflow-y:auto; padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); }
+  .modal h2{ font-family:var(--serif); font-size:16px; margin:0 0 12px; }
+  .modal-search{ width:100%; background: var(--panel-hi); border:1px solid var(--line); color:var(--ink); font-size:14px; padding:9px 12px; border-radius:8px; margin-bottom:10px; font-family:var(--sans); }
+  .modal-search:focus{ outline:none; border-color:var(--brass); }
+
+  .filter-section{ margin-bottom:16px; }
+  .filter-section:last-child{ margin-bottom:0; }
+  .filter-section h3{ font-family: var(--mono); font-size:11px; letter-spacing:0.08em; color: var(--brass); text-transform:uppercase; margin:0 0 8px; }
+  .chip-wrap{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{ font-size:12.5px; padding: 6px 12px; border-radius:999px; border:1px solid var(--line); background: transparent; color: var(--ink-dim); cursor:pointer; }
+  .chip.active{ background: var(--brass); border-color: var(--brass); color:#16171B; font-weight:600; }
+
+  .review-item{ display:flex; justify-content:space-between; align-items:center; padding:12px 8px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .review-item:last-child{ border-bottom:none; }
+  .review-item .ri-main{ flex:1; min-width:0; }
+  .review-item .ri-name{ font-size:15px; font-weight:600; }
+  .review-item .ri-def{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
+  .review-item .ri-badge{ font-size:10px; font-family:var(--mono); color:var(--ink-faint); flex:0 0 auto; margin-left:8px; text-align:right; }
+
+  .modal textarea.export-area{ width:100%; height:40vh; background: var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px; font-family: var(--mono); font-size:12px; line-height:1.6; }
+  .modal-actions{ display:flex; gap:8px; margin-top:10px; }
+  .modal-actions button{ flex:1; padding:10px; border-radius:8px; border:1px solid var(--line); background: var(--panel-hi); color:var(--ink); font-size:14px; }
+
+  .phil-dates{ font-family:var(--mono); font-size:11px; color:var(--ink-faint); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titlebar">
+    <h1>哲學概念庫</h1>
+    <span class="count" id="count">0 項</span>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="cards">概念卡</div>
+    <div class="tab" data-tab="philosophers">哲學家</div>
+  </div>
+  <div class="search-row">
+    <input id="search" type="text" placeholder="搜尋…" autocomplete="off" autocapitalize="off">
+    <button class="clear-btn" id="clearBtn">✕</button>
+  </div>
+  <div class="action-row">
+    <button class="action-btn" id="filterBtn">篩選<span class="badge" id="filterBadge" style="display:none;">0</span></button>
+    <button class="action-btn" id="reviewBtn">今日複習</button>
+    <button class="action-btn" id="collapseAllBtn">全部收合</button>
+    <button class="action-btn" id="backBtn" style="display:none;">← 返回</button>
+  </div>
+  <div class="active-pills" id="activePills"></div>
+</header>
+
+<main id="list"></main>
+
+<footer>
+  <button class="export-btn" id="exportBtn">匯出我的重述</button>
+  <span class="footer-note">本機草稿，尚未同步回 Drive</span>
+</footer>
+
+<div class="modal-mask" id="filterModalMask">
+  <div class="modal" id="filterModalBody"></div>
+</div>
+
+<div class="modal-mask" id="reviewModalMask">
+  <div class="modal">
+    <h2>今日複習</h2>
+    <div id="reviewList"></div>
+  </div>
+</div>
+
+<div class="modal-mask" id="exportModalMask">
+  <div class="modal">
+    <h2>本機重述匯出</h2>
+    <textarea class="export-area" id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button id="copyBtn">複製全部</button>
+      <button id="closeExport">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script id="cards-data" type="application/json">[
+  {
+    "id": "card-01",
+    "name_zh": "內在自然的宰制",
+    "name_orig": "Beherrschung der inneren Natur",
+    "philosopher": "霍克海默與阿多諾（Horkheimer & Adorno）",
+    "source": "《啟蒙辯證法》，附論一〈奧德修斯，或神話與啟蒙〉",
+    "aliases": [
+      "內在自然的支配",
+      "對內在自然的宰制",
+      "domination of inner nature",
+      "inner nature domination"
+    ],
+    "topics": [
+      "主體",
+      "權力"
+    ],
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "definition": "支配外在自然之前，主體必先馴服、犧牲自己內在的衝動與慾望。",
+    "context": "出現於從序言「知識即力量」推進到奧德賽篇之間的橋接論證，說明「啟蒙倒退回神話」的第二層代價——相對於同一性思維構成的第一層。",
+    "expand": [
+      "同一性思維要能運作，需要一個穩定、前後一致的主體作為運作的基座——任何歸類、命名、概念化的動作，背後都假設著一個不隨當下情緒漂移的「我」在執行這個動作。一個今天覺得是這樣、明天被恐懼淹沒就什麼都不是的主體，沒辦法維持任何概念系統。",
+      "但這個穩定的自我不是現成的。它必須被製造出來，而製造的方式，就是對自己內在那些流動的、當下的、不受控的衝動，施加與對付外在自然完全同一套的馴服手法——分類、壓抑、延遲、規訓。換句話說，支配外在自然的能力，是拿一筆內部的代價換來的：把自己身上流動的部分硬化成一個前後一致的行動中心。",
+      "這一步走通了，「啟蒙倒退回神話」才有第二層意思。第一層是形式上的——概念思考與命運的循環結構同構；第二層是代價上的：啟蒙宣稱要解除神話對人的支配，做法卻是把那個支配搬進主體內部，讓人自己來當自己的祭司。外在世界看似被解放了，代價由內在世界支付。"
+    ],
+    "relations": [
+      {
+        "type": "繼承",
+        "concept": "自我保存＝自我毀滅",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "這個支配過程的具體後果與命名公式"
+      },
+      {
+        "type": "呼應",
+        "concept": "規訓",
+        "philosopher": "傅柯",
+        "text": "兩者都描述權力如何轉向對主體內部的生產性塑造，但傅柯的規訓沒有「啟蒙必然墮落」的辯證宿命論"
+      },
+      {
+        "type": "張力",
+        "concept": "存在的單義性",
+        "philosopher": "德勒茲",
+        "text": "德勒茲的肯定性本體論拒絕「必須先自我否定才能存在」的邏輯，與此處的自我犧牲前提直接對立"
+      }
+    ],
+    "life": [
+      "**文本裡：**此概念是《啟蒙辯證法》整篇附論的框架性論點，尚未有專屬的單一場景示範，具體如何運作見〈自我保存＝自我毀滅〉與〈詭計〉兩卡——奧德修斯的整趟航程都是這個框架的演練場。",
+      "**生活裡：**任何形式的延遲滿足訓練——存錢、健身計畫、職涯規劃——都同時在做兩件事：培養一個能被信任的自己，也同時壓下當下那個想要別的東西的自己。"
+    ]
+  },
+  {
+    "id": "card-02",
+    "name_zh": "犧牲即交換",
+    "name_orig": "",
+    "philosopher": "霍克海默與阿多諾（Horkheimer & Adorno）",
+    "source": "《啟蒙辯證法》，附論一〈奧德修斯，或神話與啟蒙〉",
+    "aliases": [
+      "犧牲的理性化",
+      "犧牲的交換結構",
+      "sacrifice as exchange"
+    ],
+    "topics": [
+      "倫理"
+    ],
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "definition": "犧牲不是被理性戳穿的迷信，它本身就是最早的交換與算計形式。",
+    "context": "用來反駁「理性後來才戳破犧牲的迷信」這個常見敘事，為後面「犧牲的內轉」（見〈自我保存＝自我毀滅〉卡）鋪路。",
+    "expand": [
+      "一般的說法是：神話時代靠犧牲取悅神明，後來理性成熟了，人才看穿犧牲是迷信而廢除它。這個概念反過來主張：犧牲從來就不是非理性的，它本身就是最早的理性形式。獻上某個較小的東西，期待換來較大的回報——這個結構本身就是交換，而且裡面已經藏著算計，因為獻出去的永遠比想要的少。所謂「欺騙神明」不是犧牲的墮落形態，是它的原始構造。",
+      "這個判斷的重量在於：如果犧牲已經是交換，那麼「理性戳破了神話」這個常見敘事就講不通了——理性不是從外面來破除犧牲的，它一直就在犧牲裡面運作。犧牲與理性之間，從一開始就不是取代關係，是連續關係。"
+    ],
+    "relations": [
+      {
+        "type": "繼承",
+        "concept": "自我保存＝自我毀滅",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "犧牲的收件人從神明轉向未來的自己，是這個交換結構的內轉版本"
+      },
+      {
+        "type": "對話",
+        "concept": "交換原則 Tauschprinzip",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "兩者共享「先假設底下有可比較的量」的邏輯（Tauschprinzip 出現於同一性思維的討論中，尚未單獨建卡）"
+      }
+    ],
+    "life": [
+      "**文本裡：**《啟蒙辯證法》緊接著用奧德修斯的整趟航程示範這個交換結構如何從對神明的獻祭轉向對「未來的自己」的獻祭，見〈自我保存＝自我毀滅〉卡。",
+      "**生活裡：**尚未落地——這是對獻祭儀式起源的理論重構，不易對應到具體的日常行動，日常對應留給〈自我保存〉與〈詭計〉兩張卡處理。"
+    ]
+  },
+  {
+    "id": "card-03",
+    "name_zh": "自我保存＝自我毀滅",
+    "name_orig": "Selbsterhaltung",
+    "philosopher": "霍克海默與阿多諾（Horkheimer & Adorno）",
+    "source": "《啟蒙辯證法》，附論一〈奧德修斯，或神話與啟蒙〉",
+    "aliases": [
+      "自我保存的悖論",
+      "self-preservation as self-destruction"
+    ],
+    "topics": [
+      "主體"
+    ],
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "definition": "被保存下來的自我，是靠不斷削去自己一部分才存在的，不是先存在後被保護。",
+    "context": "從〈內在自然的宰制〉推進而來，透過奧德修斯自縛桅杆與「無人」之名兩個場景具體化為一句可操作的公式。",
+    "expand": [
+      "這個概念指向一個結構性的悖論：任何主體要維持自身的連續性與同一性，都必須透過持續地否定、壓制、延遲自己當下的衝動來完成——而這個被否定、被壓制的過程，正是那個「被保存的自我」得以存在的方式，而不是這個自我先存在、後來才被這些否定行為保護。",
+      "換句話說，自我不是一個現成的容器，紀律與犧牲不是用來保護這個容器裡的東西——**紀律與犧牲本身就是打造這個容器的工序**。不是「先有一個未來的自己，然後為了他做出犧牲」，而是「透過不斷做出犧牲，才逐漸生產出一個可以被稱為『未來的自己』的東西」。",
+      "這正是「自我保存等同於自我毀滅」這句話的第一層含義：你保存下來的那個自我，是靠不斷削去自己其他可能的樣子才存在的。它不是先有然後被保護，它是被削出來的——每一次自我保存的動作，同時也是一次自我的部分抹除。"
+    ],
+    "relations": [
+      {
+        "type": "繼承",
+        "concept": "內在自然的宰制",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "本卡是那個支配過程的具體命題化結果"
+      },
+      {
+        "type": "呼應",
+        "concept": "詭計 List",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "「無人」之名是這個悖論最鋒利的文本示範"
+      },
+      {
+        "type": "張力",
+        "concept": "死亡驅力",
+        "philosopher": "德希達（《檔案熱病》）",
+        "text": "兩者都處理「保存」內含的自我抹除，但德希達的死亡驅力指向遺忘與排除，這裡指向主體的自我構造——值得對讀但不可直接等同"
+      }
+    ],
+    "life": [
+      "**文本裡：**《啟蒙辯證法》用奧德修斯做了最鋒利的示範：他每一次忍住不吃、不睡、不說、不動，都是一次獻祭，而收下這筆祭品的，是那個「將來能回到伊薩卡的我」——但那個「我」在獻祭之前並不存在，是被這一連串的自我否定給造出來的。",
+      "**生活裡：**拿存錢當例子。今天忍住不買，是為了「未來的自己」。但「未來的自己」作為一個真的會為之打算的對象，恰恰是靠反覆忍住這個動作才慢慢變成實體的——不忍的人不是虧待了未來的自己，而是根本沒有一個未來的自己可以虧待。熬夜讀書、忍住不回一封情緒化的信，都是這個悖論活生生的演練場。"
+    ]
+  },
+  {
+    "id": "card-04",
+    "name_zh": "詭計",
+    "name_orig": "List",
+    "philosopher": "霍克海默與阿多諾（Horkheimer & Adorno）",
+    "source": "《啟蒙辯證法》，附論一〈奧德修斯，或神話與啟蒙〉",
+    "aliases": [
+      "狡計",
+      "理性的狡計（對照黑格爾）",
+      "cunning"
+    ],
+    "topics": [
+      "主體",
+      "語言"
+    ],
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "definition": "不違反規則的字面，卻掏空其實質——理性最早的形狀是鑽漏洞。",
+    "context": "以「無人」之名騙過獨眼巨人為例，說明奧德修斯的理性不是硬碰硬的英雄氣力，而是精確履行字面以掏空實質。",
+    "expand": [
+      "這個概念指的是一種特定形狀的理性：它不透過正面對抗規則來取勝，而是完全遵守規則的字面，同時把規則原本要保障的實質內容掏空。它從不硬碰硬——硬碰硬是英雄的、前理性的做法；它做的是找出契約條文裡的縫，用對方自己設下的規則本身，去瓦解那個規則原本要達成的目的。",
+      "這種理性有它自己的代價，而且這個代價會回頭作用在使用者身上：為了不被規則字面上的漏洞反過來吞掉自己，行動者往往必須暫時取消或隱藏自己身分中的某個部分——用不完整或偽裝的自我去交換生存空間。**守住字面、掏空實質，同時也在稀釋執行者自身的完整性**：這正是「啟蒙辯證法」這個書名的濃縮版——那個要保存自己的動作，本身在執行一次自我抹除。"
+    ],
+    "relations": [
+      {
+        "type": "批判",
+        "concept": "理性的狡計 List der Vernunft",
+        "philosopher": "黑格爾",
+        "text": "黑格爾的狡計是歷史理性利用個人激情達成自己的目的，方向是宏觀歷史的；此處的詭計是個體用來在具體情境中脫身的技術，方向相反且更貼身——兩者是否為刻意互文待查"
+      },
+      {
+        "type": "呼應",
+        "concept": "自我保存＝自我毀滅",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "本卡是那個悖論最鋒利的文本示範"
+      }
+    ],
+    "life": [
+      "**文本裡：**最乾淨的例子是奧德修斯對獨眼巨人報上的名字：Udeis，「無人」。這個回答在形式上完全誠實——巨人問名字，他給了名字；神話世界裡「說出真名」這個交換動作被完整履行。但正因為履行得太精確，那個名字反過來讓求救變成一句廢話：「無人在害我。」為了活下來，他必須暫時取消自己作為一個有名字的人。",
+      "**生活裡：**完全符合考核標準卻讓考核失去意義的行為——嚴格達標但精神落空——是這個公式最常見的當代變體：合約條款、法規遵循、KPI 達標、稽核應對裡反覆出現。"
+    ]
+  },
+  {
+    "id": "card-05",
+    "name_zh": "勞動與審美的分裂",
+    "name_orig": "",
+    "philosopher": "霍克海默與阿多諾（Horkheimer & Adorno）",
+    "source": "《啟蒙辯證法》，附論一〈奧德修斯，或神話與啟蒙〉",
+    "aliases": [
+      "感官的階級分配",
+      "誰有資格被誘惑",
+      "division of labor and aesthetic experience"
+    ],
+    "topics": [
+      "美學",
+      "政治",
+      "權力"
+    ],
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "definition": "誰能親近美與慾望、誰只能出力，本身就是一種不需明文宣告的階級分配。",
+    "context": "賽蓮之歌場景中兩種角色分工的具體演示，接上文化工業章的伏筆。",
+    "expand": [
+      "這個概念主張，審美經驗（與危險、崇高、慾望對象的直接相遇）與維持生存所需的勞動，經常在結構上被切割開來、分派給不同的人；誰能夠「被誘惑」、誰只能「出力」，本身就是一種資格分配，一種不需要被公開宣告就能運作的階級劃分。",
+      "這個分配通常不表現為明文規則，而是嵌在誰的身體被允許保持感官開放、誰的身體被要求封閉感官以確保產出效率之中。勞動者的生存方式往往要求感官的截肢——不是他們選擇不去感受，而是那套安排從一開始就沒有把「感受」分配給他們；而被允許親近美與慾望的那一方，通常同時也是被保護、被延遲滿足、有資格活下來講述整個故事的那一方。",
+      "這個分工模式的持久性值得注意：它不需要被重新宣告就能一路運作到當代——誰有資格去美術館、去讀難的書、去讓自己被一件作品「傷害」，誰只被要求把手上的事做完，這條線沒有消失，只是換了形式。"
+    ],
+    "relations": [
+      {
+        "type": "繼承",
+        "concept": "壓制性去昇華的雛形",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "奧德修斯這一側的機制，是這個分裂的另一半"
+      },
+      {
+        "type": "對話",
+        "concept": "感性分配 le partage du sensible",
+        "philosopher": "朗西埃",
+        "text": "兩者都在問「誰的感官被分配到什麼位置」，但朗西埃的政治任務恰恰是打破這種分配，霍克海默與阿多諾這裡只是診斷它的起源"
+      }
+    ],
+    "life": [
+      "**文本裡：**《啟蒙辯證法》用賽蓮之歌具體演示了這個分工：水手塞住耳朵划槳，連被誘惑的資格都沒有；奧德修斯耳朵開著卻被綁在桅杆上，才有資格聽見、渴望、活下來講這個故事。",
+      "**生活裡：**誰有時間與資格走進美術館、讀一本難的書、讓自己被一件作品「傷害」，誰只被要求把手上的事做完——這條界線至今仍在運作，只是不再需要繩索。"
+    ]
+  },
+  {
+    "id": "card-06",
+    "name_zh": "壓制性去昇華的雛形",
+    "name_orig": "repressive desublimation（原型）",
+    "philosopher": "霍克海默與阿多諾（原型）；馬庫色（正式命名者，1964，《單向度的人》）",
+    "source": "《啟蒙辯證法》，附論一〈奧德修斯，或神話與啟蒙〉",
+    "aliases": [
+      "repressive desublimation prototype",
+      "壓制性去昇華的原型"
+    ],
+    "topics": [
+      "美學",
+      "慾望"
+    ],
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "definition": "慾望沒有被禁止，而是被允許存在卻剝奪兌現可能，變成純粹的審美消費。",
+    "context": "賽蓮之歌中奧德修斯耳朵開著卻被綁死一段，比馬庫色早三十年寫出同一個結構，當時尚未命名。",
+    "expand": [
+      "這個概念描述一種特定的慾望管理機制：慾望本身沒有被禁止或壓抑，它被允許存在、被允許被感知，但被結構性地剝奪了兌現的可能，因而轉化為一種純粹的審美消費。危險與慾望的對象被馴服到只剩觀賞價值——這正是「去昇華」的意思：原本應該被昇華、轉化為文化與藝術成就的驅力衝動，在這裡不是被真正轉化，而是被允許以一種閹割過的形式直接展示出來，同時確保它永遠碰不到真正的滿足。",
+      "這與單純的壓抑不同：壓抑是禁止你想要，這個機制則是允許你想要、允許你享受想要本身的感覺，唯獨不允許你真正得到。**享受的方式，恰恰建立在確定自己絕不會真的得到它之上。**"
+    ],
+    "relations": [
+      {
+        "type": "繼承",
+        "concept": "壓制性去昇華 repressive desublimation",
+        "philosopher": "馬庫色",
+        "text": "馬庫色在《單向度的人》正式命名並系統化的，就是這裡的原型"
+      },
+      {
+        "type": "繼承",
+        "concept": "勞動與審美的分裂",
+        "philosopher": "霍克海默與阿多諾",
+        "text": "兩張卡描述的是同一幕的兩側，水手與奧德修斯"
+      }
+    ],
+    "life": [
+      "**文本裡：**奧德修斯自願被綁在桅杆上聆聽賽蓮之歌，正是這個機制最早的文本演練——他聽見了、渴望了，但繩索保證他無論怎麼掙扎都碰不到。藝術的誕生，在這一幕裡與「危險被馴服到只剩觀賞價值」是同一件事：能被安全地欣賞的美，是已經被拔了牙的美。",
+      "**生活裡：**被允許談論、被允許展出、被允許消費的「批判」與「異議」——只要它不威脅到能否真正兌現——都是這個結構的當代延伸。"
+    ]
+  }
+]</script>
+<script id="philosophers-data" type="application/json">[
+  {
+    "id": "phil-01",
+    "name_zh": "霍克海默",
+    "name_orig": "Max Horkheimer",
+    "dates": "1895–1973",
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "intro": "法蘭克福學派的奠基者與長期領導者。1930 年接掌法蘭克福大學社會研究所所長一職後，把一個原本偏向正統馬克思主義史料研究的機構，改造成一套結合馬克思與佛洛伊德、跨越哲學、社會學、心理分析的「批判理論」計畫。與阿多諾合著《啟蒙辯證法》，是二十世紀對「理性」本身最尖銳的自我懷疑之一。",
+    "background": [
+      "1930 年 7 月，霍克海默受聘為法蘭克福大學社會哲學教授；同年 10 月接替葛倫柏格（Carl Grünberg）出任社會研究所所長。研究所本身創立於 1923 年，由費利克斯·魏爾（Felix Weil）出資成立，最初的取向是史料式的正統馬克思主義研究；霍克海默接手後大幅轉向，開始系統性地把精神分析、社會心理學、美學批判整合進馬克思主義框架，這個轉向後來被稱為「批判理論」，其綱領見於他 1937 年的重要論文〈傳統理論與批判理論〉——這篇文章明確區分了自居中立、價值無涉的「傳統理論」，與自覺以解放為目標、承認自身立場的「批判理論」，是整個學派的方法論宣言。",
+      "1933 年納粹掌權後，研究所被迫關閉，霍克海默帶領核心成員流亡，先到日內瓦、巴黎，1934 年在哥倫比亞大學重新落腳紐約，研究所在此持續運作到 1949／1950 年。流亡美國期間，他與阿多諾合作最密切的階段展開，《啟蒙辯證法》（1944 年油印本，1947 年正式出版）就是這段時期的產物。1949 年研究所遷回法蘭克福，霍克海默 1950 年重新出任所長直到 1958 年卸任（影響力延續到更晚），此後阿多諾接掌實質領導。晚年的霍克海默思想趨於保守與悲觀，與馬庫色等人在政治參與上的路線分歧逐漸浮現。"
+    ],
+    "core_concepts": [
+      "**批判理論**：與自居中立的「傳統理論」相對，承認理論本身帶有解放意圖與立場，這是整個學派的方法論起點。",
+      "**工具理性**：見於《啟蒙辯證法》與《理性之蝕》，指理性被化約為純粹計算手段與目的之間關係的能力，喪失了判斷目的本身是否合理的能力——這是他晚期對現代性最核心的診斷。",
+      "**啟蒙的辯證**：與阿多諾共同提出，啟蒙理性宣稱要解除神話的支配，但其自身的運作邏輯（同一性思維、對自然與對自身的宰制）會辯證地倒退回它原本要克服的神話結構。見〈內在自然的宰制〉〈自我保存＝自我毀滅〉〈詭計〉等卡。"
+    ],
+    "relations": [
+      {
+        "type": "對話",
+        "name": "阿多諾",
+        "text": "終身合作者、《啟蒙辯證法》共同作者，兩人晚年在研究所裡是被公認並列的批判理論兩大領袖，思想上高度共構，難以清楚切割誰主導了哪個論點"
+      },
+      {
+        "type": "繼承",
+        "name": "馬庫色",
+        "text": "霍克海默 1930 年代擔任所長期間招募進研究所的第一代核心成員之一，兩人同屬第一代法蘭克福學派，但晚年政治路線分歧明顯——馬庫色持續投入六〇年代激進學運，霍克海默轉向政治悲觀與保守"
+      },
+      {
+        "type": "繼承",
+        "name": "哈伯瑪斯",
+        "text": "法蘭克福學派第二代領袖，1964 年接下的正是霍克海默在法蘭克福大學留下的哲學與社會學講座教職，機構位置上的直接接班人"
+      },
+      {
+        "type": "張力",
+        "name": "卡爾·波普",
+        "text": "實證主義爭論（Positivismusstreit）的對手，波普代表的證偽主義科學觀，正是霍克海默「傳統理論」批判的靶子之一（此爭論後期主要由阿多諾與哈伯瑪斯出面，霍克海默本人參與較早期階段）"
+      }
+    ],
+    "intro_reading": [
+      "《啟蒙辯證法》（與阿多諾合著）——整個學派最核心也最陰暗的一本書，直接對應目前已建的六張卡",
+      "〈傳統理論與批判理論〉（收錄於《批判理論文集》）——方法論宣言，篇幅短，適合當作入口"
+    ],
+    "advanced_reading": [
+      "《理性之蝕》（*Eclipse of Reason*，1947）——工具理性批判的獨立展開，比《啟蒙辯證法》更聚焦、更易讀",
+      "Rolf Wiggershaus，《法蘭克福學派：歷史、理論與政治意義》——學派整體的權威學術史，適合搞清楚人物關係與時間線"
+    ]
+  },
+  {
+    "id": "phil-02",
+    "name_zh": "阿多諾",
+    "name_orig": "Theodor W. Adorno",
+    "dates": "1903–1969",
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "intro": "法蘭克福學派第一代最重要的思想家之一，也是霍克海默最主要的合作夥伴。橫跨哲學、社會學、音樂學、文學批評，出身受過完整的音樂訓練（曾隨阿爾班·貝爾格學作曲），這個背景直接餵養了他對「文化工業」與美學問題的敏感度，也讓他在整個學派裡顯得格外重視藝術與否定性思維，而非直接的政治行動。晚年與激進學生運動關係緊張，是理解他晚期思想與學派內部政治張力的重要線索。",
+    "background": [
+      "1903 年生於法蘭克福，本名 Theodor Ludwig Wiesengrund，「阿多諾」取自母系姓氏，後來因申請美國公民身分而正式改用（父姓 Wiesengrund 被拿掉）。求學階段同時走哲學與音樂兩條線：在法蘭克福大學完成哲學博士與教授資格論文（後者關於齊克果的美學），同時前往維也納師從作曲家阿爾班·貝爾格；這個音樂訓練的份量不小，終其一生他都以音樂學家的身分持續寫作，這是他與霍克海默、馬庫色最明顯不同的知識背景。",
+      "1934 年因猶太身分流亡英國牛津，1938 年轉往美國紐約，加入研究所並參與普林斯頓廣播研究計畫，後期落腳加州。流亡美國期間與霍克海默密切合作，共同寫成《啟蒙辯證法》，同時獨立完成《最低限度的道德》（*Minima Moralia*，1951）——一部以格言體反思流亡經驗與「受損生活」的作品。1949 年返回法蘭克福，1958 年接替霍克海默出任研究所所長直到 1969 年猝逝。他生命的最後階段正值歐洲學運高漲，1968 年學生一度佔領研究所，阿多諾因報警處理引發爭議，這段衝突是理解他與更年輕一代激進派（包括他自己部分學生）之間真實緊張關係的重要事件，不是單純的立場分歧，而是實際發生過的公開決裂。"
+    ],
+    "core_concepts": [
+      "**文化工業**：與霍克海默共同提出，指文化產品在資本主義下被標準化、商品化生產，表面提供娛樂與慰藉，實際上壓制批判思考、鞏固既有秩序——是《啟蒙辯證法》裡最廣為人知的一章。",
+      "**否定辯證法**：阿多諾最重要的獨立哲學貢獻（見同名著作，1966），拒絕黑格爾式辯證法最終導向和解、統一的「肯定性」結局，主張真正的批判思考必須停留在否定、停留在概念與對象之間永遠無法完全吻合的裂縫裡，不假裝達成綜合。",
+      "**非同一性**：與否定辯證法直接相關——任何概念化都無法窮盡它所指涉的對象，總有剩餘逃出概念之外，這個剩餘正是批判思考該守護的東西，也是〈內在自然的宰制〉卡裡「同一性思維」被批判的理論根源。",
+      "**美學理論**：晚年最後、身後出版的巨著（*Aesthetic Theory*，1970），主張藝術（尤其現代主義藝術）透過其形式上的不和諧與抗拒消費，保存了一種抵抗同一化的可能性——這與〈壓制性去昇華的雛形〉卡裡「安全的美是被拔了牙的美」形成有意思的張力，值得對讀。"
+    ],
+    "relations": [
+      {
+        "type": "對話",
+        "name": "霍克海默",
+        "text": "終身最主要的合作者，見霍克海默主頁"
+      },
+      {
+        "type": "繼承",
+        "name": "哈伯瑪斯",
+        "text": "1956 年起擔任阿多諾的研究助理，是直接的師生關係，這段經歷形塑了哈伯瑪斯早期的問題意識，儘管他後來的理論方向與阿多諾產生了根本性的分歧（見下）"
+      },
+      {
+        "type": "張力",
+        "name": "哈伯瑪斯",
+        "text": "哈伯瑪斯後來明確認為《啟蒙辯證法》對「理性」本身的批判過於全面、幾乎自我瓦解（若理性本身已被工具化污染，批判理論賴以立論的理性基礎又從何而來），因此轉向重建一套規範性的「溝通理性」，這是法蘭克福學派內部最重要的世代轉折點之一"
+      },
+      {
+        "type": "批判",
+        "name": "馬丁·海德格",
+        "text": "《本真性的行話》（*The Jargon of Authenticity*）一書專門批判海德格式存在主義語彙裝出深刻感、實則迴避了具體的社會歷史分析"
+      },
+      {
+        "type": "對話",
+        "name": "華特·班雅明",
+        "text": "極親近的知識同盟與私交好友，阿多諾在班雅明 1940 年逃亡途中自殺身亡後，主導整理並出版了他大量未完成的遺稿；班雅明本人並非研究所正式編制成員，但與阿多諾、霍克海默的思想交流極深，常被誤認為核心成員之一——嚴格說是研究所的親近夥伴，不是機構意義上的一員"
+      },
+      {
+        "type": "張力",
+        "name": "六〇年代激進學生運動（無單一代表人物）",
+        "text": "1968 年學運高峰期與部分學生（包括他自己教過的學生）發生公開衝突，這是學派內部「理論與行動之間該如何取捨」這個問題最劇烈的一次現實演練，與馬庫色同期在美國積極支持學運形成鮮明對比"
+      }
+    ],
+    "intro_reading": [
+      "《啟蒙辯證法》（與霍克海默合著）——與已建卡片直接對應",
+      "《最低限度的道德》——格言體，篇幅可分次讀，最能感受阿多諾的文字風格與流亡經驗"
+    ],
+    "advanced_reading": [
+      "《否定辯證法》——阿多諾最系統性的哲學著作，難度較高，建議先讀完《啟蒙辯證法》再進",
+      "《美學理論》——身後出版，未完全定稿，但是理解他晚期藝術哲學的核心文本"
+    ]
+  },
+  {
+    "id": "phil-03",
+    "name_zh": "馬庫色",
+    "name_orig": "Herbert Marcuse",
+    "dates": "1898–1979",
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "intro": "法蘭克福學派第一代成員中政治立場最激進、也最積極介入現實運動的一位，被廣泛稱為「新左派之父」。早年出身海德格門下的現象學訓練，後轉向法蘭克福批判理論，晚年在美國成為六〇年代學生運動最具影響力的理論代言人之一——這條路線與阿多諾、霍克海默戰後的相對保守、退回書齋，形成整個學派內部最鮮明的一組對照。",
+    "background": [
+      "1898 年生於柏林一個融入德國社會的猶太中產家庭。1922 年於弗萊堡大學取得文學博士後，1928 至 1933 年回到弗萊堡跟隨馬丁·海德格研讀現象學，準備教授資格論文，這段訓練是他與霍克海默、阿多諾最不同的起點——他的哲學養成底色是現象學與存在主義，不是社會學或音樂學。因不滿海德格與納粹的合作關係，他放棄了這條學術路徑，未完成教授資格論文，1933 年轉而加入法蘭克福社會研究所——加入的時間點正好是納粹掌權、研究所被迫關閉流亡的同一年，馬庫色隨即輾轉日內瓦，1934 年赴美，此後終身定居美國，是三位第一代領袖裡唯一沒有隨研究所遷回德國的一位。",
+      "流亡期間他先在哥倫比亞、後在戰時為美國情報機構（先後隸屬戰略情報局的前身單位）工作，戰後持續留在美國學界，任教於哥倫比亞、哈佛、布蘭戴斯，最後長期落腳加州大學聖地牙哥分校。與阿多諾、霍克海默不同，他戰後從未返回德國定居，這個地理與機構上的分離，某種程度上也預示了他在思想與政治立場上與另兩人漸行漸遠——他持續自認馬克思主義者、社會主義者，六〇年代積極聲援學運，甚至一度捲入是否該為激進學運提供理論正當性的爭議（如 1965 年〈壓制性容忍〉一文），阿多諾、霍克海默晚年則明顯轉向政治悲觀與距離。他 1979 年在德國施塔恩貝格訪問期間中風過世。"
+    ],
+    "core_concepts": [
+      "**壓制性去昇華**：《單向度的人》（1964）提出，指發達工業社會允許慾望以被馴化、被商品化的形式公開展示與消費，藉此消解其顛覆潛能——這正是〈壓制性去昇華的雛形〉卡裡指出的，霍克海默與阿多諾早在 1944 年的奧德修斯分析裡就已經寫出同一個結構，只是尚未命名。",
+      "**單向度的人**：晚期工業社會透過消費與大眾文化，消滅了原本能提出「這個社會本可以不同」的否定性、批判性思維向度，只剩下肯定現狀的單一維度。",
+      "**大拒絕**：對整個既存秩序的根本性拒絕，不是針對個別政策的局部改良，而是對整個「這是唯一可能的現實」這個預設本身的拒絕——這個立場是他晚年積極支持激進學運的理論基礎。",
+      "**愛欲與文明**：早於《單向度的人》的著作（1955），嘗試把佛洛伊德與馬克思結合，主張壓抑並非文明存續的必要代價，存在一種「非壓制性昇華」的可能——這個相對樂觀的可能性設想，與阿多諾、霍克海默在《啟蒙辯證法》裡呈現的悲觀色調構成整個學派內部一組值得對讀的張力。"
+    ],
+    "relations": [
+      {
+        "type": "繼承",
+        "name": "霍克海默",
+        "text": "1933 年加入霍克海默領導的法蘭克福社會研究所，是第一代核心成員之一，見霍克海默主頁"
+      },
+      {
+        "type": "對話",
+        "name": "阿多諾",
+        "text": "長期同僚，據傳兩人私交甚篤，但晚年在政治介入的態度上分歧明顯"
+      },
+      {
+        "type": "張力",
+        "name": "阿多諾",
+        "text": "戰後路線分歧的核心——馬庫色持續留在美國、積極介入六〇年代學運，阿多諾與霍克海默返回德國、晚年趨向政治悲觀與對學運的疏離甚至衝突（見阿多諾主頁 1968 年報警事件），三人同屬第一代卻走上不同的政治位置，是理解「法蘭克福學派」不是鐵板一塊的關鍵案例"
+      },
+      {
+        "type": "批判",
+        "name": "馬丁·海德格",
+        "text": "早年業師，因海德格與納粹的合作關係而與其決裂，未完成在海德格門下的教授資格論文"
+      },
+      {
+        "type": "呼應",
+        "name": "六〇年代新左派學運（無單一代表人物）",
+        "text": "思想上被廣泛視為運動的理論靈感來源之一，「新左派之父」的稱號即由此而來"
+      }
+    ],
+    "intro_reading": [
+      "《單向度的人》——與已建的〈壓制性去昇華的雛形〉卡直接對應，第一、三章優先",
+      "〈壓制性容忍〉（收錄於多種選集）——短篇論文，最能感受他晚期政治立場的鋒利與爭議性"
+    ],
+    "advanced_reading": [
+      "《愛欲與文明》——佛洛伊德與馬克思的綜合嘗試，理解他與阿多諾、霍克海默悲觀色調之間張力的關鍵文本",
+      "《理性與革命：黑格爾與社會理論的興起》（1941）——他對黑格爾的系統性解讀，較早期、較學院派的一本"
+    ]
+  },
+  {
+    "id": "phil-04",
+    "name_zh": "哈伯瑪斯",
+    "name_orig": "Jürgen Habermas",
+    "dates": "1929–2026",
+    "traditions": [
+      "法蘭克福學派／批判理論"
+    ],
+    "date": "2026-08-22",
+    "status": "定稿",
+    "intro": "法蘭克福學派第二代公認的領袖人物，也是把批判理論從第一代的悲觀基調裡拉出來、重新給它一套規範性基礎的關鍵人物。以「溝通理性」與「公共領域」概念聞名，晚年高齡仍持續公共發言，是戰後德國最具影響力的公共知識分子之一。**須特別註明：哈伯瑪斯已於 2026 年 3 月 14 日在德國施塔恩貝格過世，享耆壽 96 歲——這則消息晚於 Claude 的訓練資料截止時間，是透過網路查證確認的近期事實，寫這份主頁時他剛過世不久。**",
+    "background": [
+      "1929 年生於杜塞道夫。求學橫跨哥廷根、蘇黎世、波昂大學，1954 年於波昂取得哲學博士。1956 年進入法蘭克福社會研究所，擔任阿多諾的研究助理——這是他與第一代學派最直接的機構與師承連結。1962 年出版第一本重要著作《公共領域的結構轉型》，確立學術聲望。",
+      "1964 年，哈伯瑪斯接下的正是霍克海默在法蘭克福大學留下的哲學與社會學講座教職，這個位置具有象徵意義：他直接接續了第一代領袖留下的機構位置。1971 至 1983 年出任研究所所長（1983 年一度短暫回任），1994 年退休。晚年持續高齡筆耕與公共發言，直到 2026 年過世前不久仍在接受公開致意（見上方近期過世的查證說明）。"
+    ],
+    "core_concepts": [
+      "**溝通理性／溝通行動**：哈伯瑪斯理論體系的核心，見於巨著《溝通行動理論》（1981）。區分「策略行動」（以達成個人目的為導向，把他人當作工具）與「溝通行動」（以達成相互理解為導向，預設參與者之間平等的論證地位），主張後者蘊藏著一種未被完全工具化、值得被重建與捍衛的理性核心。",
+      "**公共領域**：《公共領域的結構轉型》提出，指涉一個介於國家與私人領域之間、公民可以透過理性論辯形成公共意見的社會空間——這個空間在他分析裡經歷了從十八世紀布爾喬亞公共領域的興起，到二十世紀被大眾媒體與商業利益侵蝕、結構轉型的過程。",
+      "**對第一代學派的重建與批判**：哈伯瑪斯認為《啟蒙辯證法》對「理性」的批判過於全面——如果連理性本身都已經被工具理性徹底污染，那麼批判理論賴以立論、賴以主張「這個社會不該是這樣」的立足點又是什麼？這個自我瓦解的疑慮，是他整套「溝通理性」計畫要解決的問題：不是放棄理性，而是在理性內部找出一種沒有被工具化污染的規範性核心（溝通理性），重新給批判理論一個站得住腳的基礎。"
+    ],
+    "relations": [
+      {
+        "type": "繼承",
+        "name": "阿多諾",
+        "text": "1956 年起的直接師生／助理關係，見阿多諾主頁"
+      },
+      {
+        "type": "張力",
+        "name": "阿多諾",
+        "text": "對《啟蒙辯證法》（與霍克海默合著）的全面理性批判抱持根本保留，這是法蘭克福學派內部最重要的世代轉折——哈伯瑪斯代表的是從「否定辯證法」式的悲觀，轉向一套重新肯認理性規範性核心的「重建」計畫，兩代人對「理性能不能被拯救」這個問題給出了不同答案"
+      },
+      {
+        "type": "繼承",
+        "name": "霍克海默",
+        "text": "1964 年接下霍克海默在法蘭克福大學留下的講座教職，機構位置上的直接接班人"
+      },
+      {
+        "type": "張力",
+        "name": "尚-法蘭索瓦·李歐塔",
+        "text": "與後結構主義／後現代主義陣營（尤其李歐塔對「大敘事」的懷疑）長期論辯，哈伯瑪斯捍衛啟蒙理性計畫尚未完成、不該被放棄，這場交鋒是理解「批判理論」與「後結構主義／後現代主義」這兩個傳統標籤之間根本分歧的重要參照點"
+      }
+    ],
+    "intro_reading": [
+      "《公共領域的結構轉型》——他最早也最易讀的重要著作，公共領域概念的原始出處",
+      "相關次級導論（如 James Gordon Finlayson 的 *Habermas: A Very Short Introduction*）——他的系統性理論門檻較高，建議先讀導論建立地圖"
+    ],
+    "advanced_reading": [
+      "《溝通行動理論》（兩卷本）——他最核心也最龐大的理論工程，建議先讀完導論性文獻再進",
+      "《現代性的哲學論述》——他對後結構主義／後現代主義陣營最系統性的批判與回應，適合對讀朗西埃、德希達等卡片時參考"
+    ]
+  }
+]</script>
+<script>
+const CARDS = JSON.parse(document.getElementById('cards-data').textContent);
+const PHILOSOPHERS = JSON.parse(document.getElementById('philosophers-data').textContent);
+const LS_PREFIX = 'philcard:';
+const LS_PHIL_PREFIX = 'philosopher:';
+
+const state = {
+  tab: 'cards',
+  query: '',
+  filters: { philosopher: null, topic: null, tradition: null, status: null, philTradition: null },
+  open: {},
+};
+const navHistory = []; // stack of {tab, scrollY, filters, query} — 支援多層跳轉逐層返回
+
+// ---------- localStorage helpers ----------
+function lsKey(id, field){ return `${LS_PREFIX}${id}:${field}`; }
+function lsGet(id, field, fallback=''){ return localStorage.getItem(lsKey(id, field)) ?? fallback; }
+function lsSet(id, field, val){ localStorage.setItem(lsKey(id, field), val); }
+function touch(id){ lsSet(id, 'lastTouched', String(Date.now())); }
+
+function philLsKey(id, field){ return `${LS_PHIL_PREFIX}${id}:${field}`; }
+function philLsGet(id, field, fallback=''){ return localStorage.getItem(philLsKey(id, field)) ?? fallback; }
+function philLsSet(id, field, val){ localStorage.setItem(philLsKey(id, field), val); }
+
+// ---------- generic helpers ----------
+function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
+function mdInline(escaped){ return escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+function philKey(name){ return (name||'').split('（')[0].split('(')[0].trim(); }
+function uniqueSorted(arr){ return [...new Set(arr)].filter(Boolean).sort((a,b)=>a.localeCompare(b,'zh-Hant')); }
+function timeAgo(ts){
+  if(!ts) return '尚未讀過';
+  const diffMs = Date.now() - Number(ts);
+  const day = 86400000;
+  const days = Math.floor(diffMs / day);
+  if(days <= 0) return '今天讀過';
+  if(days === 1) return '昨天讀過';
+  if(days < 30) return `${days} 天前讀過`;
+  const months = Math.floor(days/30);
+  return `${months} 個月前讀過`;
+}
+
+const PHIL_COLORS = {};
+const PALETTE = ['#C9A227','#52b0e0','#e08852','#52e07a','#a052e0','#e05252','#7fd4c1','#d68fd6'];
+function philColor(name){
+  const key = philKey(name);
+  if(!PHIL_COLORS[key]) PHIL_COLORS[key] = PALETTE[Object.keys(PHIL_COLORS).length % PALETTE.length];
+  return PHIL_COLORS[key];
+}
+
+const REL_CLASS = { '張力':'rel-c-tension', '呼應':'rel-c-resonance', '批判':'rel-c-critique', '繼承':'rel-c-inheritance', '對話':'rel-c-dialogue' };
+
+// generic longest-match-first name linkifier against an arbitrary name->id map
+function linkifyNames(text, nameToId, jumpAttr, excludeId){
+  const names = [...nameToId.keys()].sort((a,b)=>b.length-a.length);
+  let html = ''; let i = 0;
+  while(i < text.length){
+    let matched = null;
+    for(const n of names){
+      if(n && text.startsWith(n, i)){ matched = n; break; }
+    }
+    if(matched){
+      const id = nameToId.get(matched);
+      if(id && id !== excludeId){
+        html += `<span class="rel-link" data-${jumpAttr}="${id}">${escapeHtml(matched)}</span>`;
+      } else {
+        html += escapeHtml(matched);
+      }
+      i += matched.length;
+    } else {
+      html += escapeHtml(text[i]);
+      i += 1;
+    }
+  }
+  return html;
+}
+
+function philNameMap(){
+  const m = new Map();
+  PHILOSOPHERS.forEach(p => m.set(p.name_zh, p.id));
+  return m;
+}
+function cardNameMap(){
+  const m = new Map();
+  CARDS.forEach(c => m.set(c.name_zh, c.id));
+  return m;
+}
+
+function findTargetCard(conceptText, excludeId){
+  return CARDS.find(c => c.id !== excludeId && conceptText.includes(c.name_zh));
+}
+
+// ---------- CARD rendering ----------
+function relHtml(rel, ownerId){
+  const cls = REL_CLASS[rel.type] || 'rel-c-dialogue';
+  const target = findTargetCard(rel.concept, ownerId);
+  const conceptHtml = target
+    ? `<span class="rel-link" data-jump="${target.id}">${escapeHtml(rel.concept)}<span class="rel-jump-icon">↳</span></span>`
+    : escapeHtml(rel.concept);
+  const philHtml = linkifyNames(rel.philosopher, philNameMap(), 'jump-phil', null);
+  return `
+    <div class="rel ${cls}">
+      <span class="rel-dot"></span>
+      <span><span class="rel-type">[${escapeHtml(rel.type)}]</span>${conceptHtml}／${philHtml}：${escapeHtml(rel.text)}</span>
+    </div>`;
+}
+
+function cardMatches(card){
+  const f = state.filters;
+  if(f.philosopher && philKey(card.philosopher) !== f.philosopher) return false;
+  if(f.topic && !card.topics.includes(f.topic)) return false;
+  if(f.tradition && !card.traditions.includes(f.tradition)) return false;
+  if(f.status){
+    const st = lsGet(card.id, 'status', '未複習');
+    if(st !== f.status) return false;
+  }
+  const q = state.query.trim().toLowerCase();
+  if(!q) return true;
+  const hay = [card.name_zh, card.name_orig, card.philosopher, card.source,
+    ...(card.aliases||[]), ...(card.topics||[]), ...(card.traditions||[]), card.definition].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
+function cardHtml(card){
+  const isOpen = !!state.open[card.id];
+  const reflection = lsGet(card.id, 'reflection', '');
+  const status = lsGet(card.id, 'status', '未複習');
+  const lastTouched = lsGet(card.id, 'lastTouched', '');
+  const savedNote = reflection ? `已於本機儲存重述（${reflection.length} 字）` : '尚未填寫重述';
+  const philLinked = linkifyNames(card.philosopher, philNameMap(), 'jump-phil', null);
+
+  return `
+  <div class="card ${isOpen?'open':''}" data-id="${card.id}" id="${card.id}">
+    <div class="card-head" data-toggle="${card.id}">
+      <div class="card-tab" style="background:${philColor(card.philosopher)}"></div>
+      <div class="card-main">
+        <div class="card-name-row">
+          <span class="card-name">${escapeHtml(card.name_zh)}</span>
+          ${card.name_orig ? `<span class="card-orig">${escapeHtml(card.name_orig)}</span>` : ''}
+        </div>
+        <div class="card-sub">${philLinked}</div>
+        <div class="card-def">${escapeHtml(card.definition)}</div>
+        <div class="card-tags">
+          ${card.traditions.map(t=>`<span class="tag-pill tradition">${escapeHtml(t)}</span>`).join('')}
+          ${card.topics.map(t=>`<span class="tag-pill">#${escapeHtml(t)}</span>`).join('')}
+        </div>
+      </div>
+      <div class="card-stamp">
+        建卡 ${escapeHtml(card.date)}
+        <div class="touched">${timeAgo(lastTouched)}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="sec"><h3>出處</h3><p>${escapeHtml(card.source)}</p></div>
+      ${card.context ? `<div class="sec"><h3>本次脈絡</h3><p>${escapeHtml(card.context)}</p></div>` : ''}
+      <div class="sec"><h3>完整展開</h3>${card.expand.map(p=>`<p>${mdInline(escapeHtml(p))}</p>`).join('')}</div>
+      <div class="sec"><h3>概念關係</h3>${card.relations.map(r=>relHtml(r, card.id)).join('')}</div>
+      <div class="sec"><h3>這概念在生活裡的樣子</h3>${card.life.map(p=>`<p>${mdInline(escapeHtml(p))}</p>`).join('')}</div>
+      <div class="sec"><h3>別名</h3><p>${card.aliases.map(escapeHtml).join(' ／ ')}</p></div>
+      <div class="sec">
+        <h3>我的重述（本機草稿）</h3>
+        <textarea class="reflection" data-id="${card.id}" placeholder="用自己的話重新說一次這個概念…">${escapeHtml(reflection)}</textarea>
+        <div class="save-state" data-save="${card.id}">${savedNote}</div>
+        <div class="status-row">
+          ${['未複習','已重述','需重讀'].map(s => `
+            <button class="status-btn ${s===status?'active':''}" data-status="${card.id}" data-value="${s}">${s}</button>
+          `).join('')}
+        </div>
+        <button class="read-btn" data-touch="${card.id}">我剛讀過</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---------- PHILOSOPHER rendering ----------
+function philRelHtml(rel, ownerId){
+  const cls = REL_CLASS[rel.type] || 'rel-c-dialogue';
+  const target = PHILOSOPHERS.find(p => p.id !== ownerId && rel.name.includes(p.name_zh));
+  const nameHtml = target
+    ? `<span class="rel-link" data-jump-phil="${target.id}">${escapeHtml(rel.name)}<span class="rel-jump-icon">↳</span></span>`
+    : escapeHtml(rel.name);
+  return `
+    <div class="rel ${cls}">
+      <span class="rel-dot"></span>
+      <span><span class="rel-type">[${escapeHtml(rel.type)}]</span>${nameHtml}：${escapeHtml(rel.text)}</span>
+    </div>`;
+}
+
+function philMatches(phil){
+  const f = state.filters;
+  if(f.philTradition && !phil.traditions.includes(f.philTradition)) return false;
+  const q = state.query.trim().toLowerCase();
+  if(!q) return true;
+  const hay = [phil.name_zh, phil.name_orig, phil.dates, ...(phil.traditions||[]), phil.intro, ...(phil.core_concepts||[])].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
+function relatedCards(philId){
+  const phil = PHILOSOPHERS.find(p=>p.id===philId);
+  if(!phil) return [];
+  return CARDS.filter(c => c.philosopher.includes(phil.name_zh));
+}
+
+function philHtml(phil){
+  const isOpen = !!state.open[phil.id];
+  const note = philLsGet(phil.id, 'note', '');
+  const cards = relatedCards(phil.id);
+  return `
+  <div class="card ${isOpen?'open':''}" data-id="${phil.id}" id="${phil.id}">
+    <div class="card-head" data-toggle="${phil.id}">
+      <div class="card-tab" style="background:${philColor(phil.name_zh)}"></div>
+      <div class="card-main">
+        <div class="card-name-row">
+          <span class="card-name">${escapeHtml(phil.name_zh)}</span>
+          <span class="card-orig">${escapeHtml(phil.name_orig)}</span>
+          <span class="phil-dates">${escapeHtml(phil.dates)}</span>
+        </div>
+        <div class="card-def">${escapeHtml(phil.intro)}</div>
+        <div class="card-tags">
+          ${phil.traditions.map(t=>`<span class="tag-pill tradition">${escapeHtml(t)}</span>`).join('')}
+          ${cards.length ? `<span class="tag-pill">${cards.length} 張相關卡片</span>` : ''}
+        </div>
+      </div>
+      <span class="chev">▸</span>
+    </div>
+    <div class="card-body">
+      <div class="sec"><h3>學術脈絡</h3>${phil.background.map(p=>`<p>${mdInline(escapeHtml(p))}</p>`).join('')}</div>
+      <div class="sec"><h3>核心概念</h3><ul>${phil.core_concepts.map(c=>`<li>${mdInline(escapeHtml(c))}</li>`).join('')}</ul></div>
+      <div class="sec"><h3>與其他哲學家的關聯</h3>${phil.relations.map(r=>philRelHtml(r, phil.id)).join('')}</div>
+      ${cards.length ? `<div class="sec"><h3>相關概念卡</h3>${cards.map(c=>`
+        <div class="rel">
+          <span class="rel-dot" style="background:${philColor(phil.name_zh)}"></span>
+          <span><span class="rel-link" data-jump-to-card="${c.id}">${escapeHtml(c.name_zh)}</span>——${escapeHtml(c.definition)}</span>
+        </div>`).join('')}</div>` : ''}
+      <div class="sec"><h3>入門書單</h3><ul>${phil.intro_reading.map(r=>`<li>${mdInline(escapeHtml(r))}</li>`).join('')}</ul></div>
+      <div class="sec"><h3>進階書單</h3><ul>${phil.advanced_reading.map(r=>`<li>${mdInline(escapeHtml(r))}</li>`).join('')}</ul></div>
+      <div class="sec">
+        <h3>我的筆記（本機草稿）</h3>
+        <textarea class="reflection" data-phil-id="${phil.id}" placeholder="關於這個人的筆記…">${escapeHtml(note)}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---------- filter modal ----------
+function activeFilterCount(){
+  const f = state.filters;
+  return state.tab === 'cards'
+    ? ['philosopher','topic','tradition','status'].filter(k=>f[k]).length
+    : ['philTradition'].filter(k=>f[k]).length;
+}
+
+function buildFilterModal(){
+  const body = document.getElementById('filterModalBody');
+  if(state.tab === 'cards'){
+    const philCounts = {}; CARDS.forEach(c => { const k = philKey(c.philosopher); philCounts[k]=(philCounts[k]||0)+1; });
+    const topicCounts = {}; CARDS.forEach(c => c.topics.forEach(t => topicCounts[t]=(topicCounts[t]||0)+1));
+    const tradCounts = {}; CARDS.forEach(c => c.traditions.forEach(t => tradCounts[t]=(tradCounts[t]||0)+1));
+    const statusCounts = {'未複習':0,'已重述':0,'需重讀':0};
+    CARDS.forEach(c => { const s = lsGet(c.id,'status','未複習'); statusCounts[s] = (statusCounts[s]||0)+1; });
+
+    const section = (title, key, counts) => `
+      <div class="filter-section">
+        <h3>${title}</h3>
+        <div class="chip-wrap">
+          ${uniqueSorted(Object.keys(counts)).map(v => `
+            <span class="chip ${state.filters[key]===v?'active':''}" data-fkey="${key}" data-fval="${escapeAttr(v)}">${escapeHtml(v)} (${counts[v]})</span>
+          `).join('')}
+        </div>
+      </div>`;
+
+    body.innerHTML = `
+      <h2>篩選</h2>
+      ${section('哲學家', 'philosopher', philCounts)}
+      ${section('主題', 'topic', topicCounts)}
+      ${section('傳統', 'tradition', tradCounts)}
+      ${section('狀態', 'status', statusCounts)}
+    `;
+  } else {
+    const tradCounts = {}; PHILOSOPHERS.forEach(p => p.traditions.forEach(t => tradCounts[t]=(tradCounts[t]||0)+1));
+    body.innerHTML = `
+      <h2>篩選</h2>
+      <div class="filter-section">
+        <h3>傳統</h3>
+        <div class="chip-wrap">
+          ${uniqueSorted(Object.keys(tradCounts)).map(v => `
+            <span class="chip ${state.filters.philTradition===v?'active':''}" data-fkey="philTradition" data-fval="${escapeAttr(v)}">${escapeHtml(v)} (${tradCounts[v]})</span>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+  body.querySelectorAll('[data-fkey]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const k = chip.dataset.fkey, v = chip.dataset.fval;
+      state.filters[k] = state.filters[k] === v ? null : v;
+      buildFilterModal();
+      render();
+    });
+  });
+}
+document.getElementById('filterBtn').addEventListener('click', () => {
+  buildFilterModal();
+  document.getElementById('filterModalMask').classList.add('show');
+});
+document.getElementById('filterModalMask').addEventListener('click', e => {
+  if(e.target.id === 'filterModalMask') e.currentTarget.classList.remove('show');
+});
+
+function updateFilterUI(){
+  const n = activeFilterCount();
+  const badge = document.getElementById('filterBadge');
+  badge.style.display = n>0 ? 'inline-block' : 'none';
+  badge.textContent = n;
+  document.getElementById('filterBtn').classList.toggle('active', n>0);
+
+  const pills = document.getElementById('activePills');
+  const f = state.filters;
+  const labels = state.tab === 'cards'
+    ? [['philosopher','哲學家'],['topic','主題'],['tradition','傳統'],['status','狀態']]
+    : [['philTradition','傳統']];
+  let html = '';
+  labels.forEach(([key,label]) => {
+    if(f[key]) html += `<span class="pill" data-clear="${key}">${label}：${escapeHtml(f[key])} ✕</span>`;
+  });
+  pills.innerHTML = html;
+  pills.querySelectorAll('[data-clear]').forEach(p => {
+    p.addEventListener('click', () => { state.filters[p.dataset.clear] = null; render(); });
+  });
+}
+
+// ---------- tabs ----------
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    state.tab = t.dataset.tab;
+    state.query = ''; document.getElementById('search').value = '';
+    document.getElementById('clearBtn').classList.remove('show');
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x===t));
+    document.getElementById('search').placeholder = state.tab==='cards' ? '搜尋概念、別名、哲學家、標籤…' : '搜尋哲學家姓名、傳統…';
+    document.getElementById('reviewBtn').style.display = state.tab==='cards' ? '' : 'none';
+    render();
+  });
+});
+
+// ---------- search ----------
+document.getElementById('search').addEventListener('input', e => {
+  state.query = e.target.value;
+  document.getElementById('clearBtn').classList.toggle('show', !!e.target.value);
+  render();
+});
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('search').value = ''; state.query='';
+  document.getElementById('clearBtn').classList.remove('show');
+  render();
+});
+
+// ---------- expand/collapse all ----------
+document.getElementById('collapseAllBtn').addEventListener('click', () => {
+  const items = state.tab === 'cards' ? CARDS : PHILOSOPHERS;
+  items.forEach(i => { state.open[i.id] = false; });
+  render();
+});
+
+// ---------- back navigation ----------
+function updateBackButton(){
+  const btn = document.getElementById('backBtn');
+  btn.style.display = navHistory.length > 0 ? '' : 'none';
+}
+function pushHistory(){
+  navHistory.push({ tab: state.tab, scrollY: win_scrollY(), filters: {...state.filters}, query: state.query });
+}
+function win_scrollY(){ return (typeof window !== 'undefined' && window.scrollY) || 0; }
+document.getElementById('backBtn').addEventListener('click', () => {
+  if(navHistory.length === 0) return;
+  const prev = navHistory.pop();
+  state.tab = prev.tab;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===prev.tab));
+  document.getElementById('search').placeholder = prev.tab==='cards' ? '搜尋概念、別名、哲學家、標籤…' : '搜尋哲學家姓名、傳統…';
+  document.getElementById('reviewBtn').style.display = prev.tab==='cards' ? '' : 'none';
+  state.query = prev.query; document.getElementById('search').value = prev.query;
+  document.getElementById('clearBtn').classList.toggle('show', !!prev.query);
+  state.filters = prev.filters;
+  render();
+  updateBackButton();
+  requestAnimationFrame(() => { window.scrollTo(0, prev.scrollY); });
+});
+
+// ---------- jump ----------
+function switchTab(tab){
+  if(state.tab === tab) return;
+  state.tab = tab;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===tab));
+  document.getElementById('search').placeholder = tab==='cards' ? '搜尋概念、別名、哲學家、標籤…' : '搜尋哲學家姓名、傳統…';
+  document.getElementById('reviewBtn').style.display = tab==='cards' ? '' : 'none';
+}
+
+function jumpTo(targetId, targetTab){
+  pushHistory();
+  switchTab(targetTab);
+  state.query = ''; document.getElementById('search').value = '';
+  document.getElementById('clearBtn').classList.remove('show');
+  if(targetTab === 'cards'){
+    state.filters = { philosopher:null, topic:null, tradition:null, status:null, philTradition: state.filters.philTradition };
+  } else {
+    state.filters = { philosopher:null, topic:null, tradition:null, status:null, philTradition:null };
+  }
+  state.open[targetId] = true;
+  render();
+  updateBackButton();
+  requestAnimationFrame(() => {
+    const el = document.getElementById(targetId);
+    if(el){
+      if(typeof el.scrollIntoView === 'function') el.scrollIntoView({behavior:'smooth', block:'start'});
+      el.classList.add('flash');
+      setTimeout(()=> el.classList.remove('flash'), 1200);
+    }
+  });
+}
+
+// ---------- render ----------
+function render(){
+  updateFilterUI();
+  const items = state.tab === 'cards' ? CARDS.filter(cardMatches) : PHILOSOPHERS.filter(philMatches);
+  document.getElementById('count').textContent = `${items.length} 項`;
+  const list = document.getElementById('list');
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty">沒有項目符合目前的搜尋與篩選。<br>試試看拿掉一個篩選條件，或換個關鍵字。</div>`;
+    return;
+  }
+  list.innerHTML = items.map(state.tab==='cards' ? cardHtml : philHtml).join('');
+
+  list.querySelectorAll('[data-toggle]').forEach(el => {
+    el.addEventListener('click', () => { const id = el.dataset.toggle; state.open[id] = !state.open[id]; render(); });
+  });
+  list.querySelectorAll('textarea.reflection[data-id]').forEach(ta => {
+    ta.addEventListener('click', e => e.stopPropagation());
+    ta.addEventListener('input', () => {
+      lsSet(ta.dataset.id, 'reflection', ta.value);
+      const note = list.querySelector(`[data-save="${ta.dataset.id}"]`);
+      if(note) note.textContent = ta.value ? `已於本機儲存重述（${ta.value.length} 字）` : '尚未填寫重述';
+    });
+  });
+  list.querySelectorAll('textarea.reflection[data-phil-id]').forEach(ta => {
+    ta.addEventListener('click', e => e.stopPropagation());
+    ta.addEventListener('input', () => { philLsSet(ta.dataset.philId, 'note', ta.value); });
+  });
+  list.querySelectorAll('[data-status]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      lsSet(btn.dataset.status, 'status', btn.dataset.value);
+      touch(btn.dataset.status);
+      render();
+    });
+  });
+  list.querySelectorAll('[data-touch]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); touch(btn.dataset.touch); render(); });
+  });
+  list.querySelectorAll('[data-jump]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); jumpTo(el.dataset.jump, 'cards'); });
+  });
+  list.querySelectorAll('[data-jump-phil]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); jumpTo(el.dataset.jumpPhil, 'philosophers'); });
+  });
+  list.querySelectorAll('[data-jump-to-card]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); jumpTo(el.dataset.jumpToCard, 'cards'); });
+  });
+}
+
+// ---------- today's review ----------
+function buildReviewQueue(n=5){
+  const tiers = [
+    CARDS.filter(c => lsGet(c.id,'status','未複習') === '需重讀'),
+    CARDS.filter(c => lsGet(c.id,'status','未複習') === '未複習'),
+    CARDS.filter(c => lsGet(c.id,'status','未複習') === '已重述'),
+  ];
+  const byOldest = (a,b) => {
+    const ta = Number(lsGet(a.id,'lastTouched','0'));
+    const tb = Number(lsGet(b.id,'lastTouched','0'));
+    return ta - tb; // 0 (never touched) sorts first
+  };
+  let queue = [];
+  for(const tier of tiers){
+    tier.sort(byOldest);
+    for(const c of tier){
+      if(queue.length >= n) break;
+      queue.push(c);
+    }
+    if(queue.length >= n) break;
+  }
+  return queue;
+}
+document.getElementById('reviewBtn').addEventListener('click', () => {
+  const queue = buildReviewQueue(5);
+  const listEl = document.getElementById('reviewList');
+  if(queue.length === 0){
+    listEl.innerHTML = `<div class="empty">卡片庫是空的。</div>`;
+  } else {
+    listEl.innerHTML = queue.map(c => {
+      const status = lsGet(c.id,'status','未複習');
+      const lastTouched = lsGet(c.id,'lastTouched','');
+      return `<div class="review-item" data-review-jump="${c.id}">
+        <div class="ri-main"><div class="ri-name">${escapeHtml(c.name_zh)}</div><div class="ri-def">${escapeHtml(c.definition)}</div></div>
+        <div class="ri-badge">${escapeHtml(status)}<br>${timeAgo(lastTouched)}</div>
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('[data-review-jump]').forEach(el => {
+      el.addEventListener('click', () => {
+        document.getElementById('reviewModalMask').classList.remove('show');
+        jumpTo(el.dataset.reviewJump, 'cards');
+      });
+    });
+  }
+  document.getElementById('reviewModalMask').classList.add('show');
+});
+document.getElementById('reviewModalMask').addEventListener('click', e => {
+  if(e.target.id === 'reviewModalMask') e.currentTarget.classList.remove('show');
+});
+
+// ---------- export ----------
+document.getElementById('exportBtn').addEventListener('click', () => {
+  let out = `哲學概念庫｜本機重述匯出\n匯出時間：${new Date().toLocaleString('zh-TW')}\n\n`;
+  let any = false;
+  CARDS.forEach(c => {
+    const reflection = lsGet(c.id, 'reflection', '');
+    const status = lsGet(c.id, 'status', '未複習');
+    if(reflection || status !== '未複習'){
+      any = true;
+      out += `## ${c.name_zh}｜${c.name_orig}\n複習狀態：${status}\n我的重述：${reflection || '（未填寫）'}\n\n`;
+    }
+  });
+  PHILOSOPHERS.forEach(p => {
+    const note = philLsGet(p.id, 'note', '');
+    if(note){ any = true; out += `## [哲學家] ${p.name_zh}\n我的筆記：${note}\n\n`; }
+  });
+  if(!any) out += '（目前沒有任何本機草稿。先在卡片或哲學家頁面裡寫點東西再匯出。）';
+  document.getElementById('exportText').value = out;
+  document.getElementById('exportModalMask').classList.add('show');
+});
+document.getElementById('closeExport').addEventListener('click', () => document.getElementById('exportModalMask').classList.remove('show'));
+document.getElementById('exportModalMask').addEventListener('click', e => { if(e.target.id === 'exportModalMask') e.currentTarget.classList.remove('show'); });
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const ta = document.getElementById('exportText');
+  ta.select(); ta.setSelectionRange(0, 999999);
+  document.execCommand('copy');
+  document.getElementById('copyBtn').textContent = '已複製';
+  setTimeout(()=> document.getElementById('copyBtn').textContent = '複製全部', 1500);
+});
+
+render();
+
+</script>
+</body>
+</html>
