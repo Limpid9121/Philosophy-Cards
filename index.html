@@ -134,6 +134,10 @@
   .chip-wrap{ display:flex; flex-wrap:wrap; gap:6px; }
   .chip{ font-size:12.5px; padding: 6px 12px; border-radius:999px; border:1px solid var(--line); background: transparent; color: var(--ink-dim); cursor:pointer; }
   .chip.active{ background: var(--brass); border-color: var(--brass); color:#16171B; font-weight:600; }
+  .filter-more{ margin:4px 0 18px; border:1px solid var(--line); border-radius:10px; padding:0 12px; }
+  .filter-more summary{ cursor:pointer; color:var(--ink-dim); font-size:13px; padding:10px 0; user-select:none; }
+  .filter-more[open] summary{ color:var(--brass); border-bottom:1px solid var(--line); margin-bottom:12px; }
+  .filter-more .filter-section{ margin-bottom:12px; }
 
   .review-item{ display:flex; justify-content:space-between; align-items:center; padding:12px 8px; border-bottom:1px solid var(--line); cursor:pointer; }
   .review-item:last-child{ border-bottom:none; }
@@ -167,6 +171,7 @@
   <div class="action-row">
     <button class="action-btn" id="filterBtn">篩選<span class="badge" id="filterBadge" style="display:none;">0</span></button>
     <button class="action-btn" id="reviewBtn">今日複習</button>
+    <button class="action-btn" id="randomReviewBtn" title="從目前搜尋與篩選結果中隨機挑選一項">隨機複習</button>
     <button class="action-btn" id="collapseAllBtn">全部收合</button>
     <button class="action-btn" id="backBtn" style="display:none;">← 返回</button>
   </div>
@@ -11764,6 +11769,7 @@ const state = {
   query: '',
   filters: { philosopher: null, topic: null, tradition: null, status: null, philTradition: null },
   open: {},
+  lastRandom: { cards: null, philosophers: null },
 };
 const navHistory = []; // stack of {tab, scrollY, filters, query} — 支援多層跳轉逐層返回
 
@@ -11810,6 +11816,136 @@ function escapeHtml(s){ return (s||'').replace(/[&<>]/g, ch => ({'&':'&amp;','<'
 function mdInline(escaped){ return escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
 function philKey(name){ return (name||'').split('（')[0].split('(')[0].trim(); }
 function uniqueSorted(arr){ return [...new Set(arr)].filter(Boolean).sort((a,b)=>a.localeCompare(b,'zh-Hant')); }
+
+// 哲學家篩選使用正規化人物標籤；卡片內的原始「哲學家」文字保持不變。
+const PHIL_DISPLAY_NAMES = {
+  '霍克海默':'馬克斯·霍克海默','阿多諾':'西奧多·阿多諾','馬庫色':'赫伯特·馬庫色',
+  '哈伯瑪斯':'尤爾根·哈伯瑪斯','弗雷澤':'南茜·弗雷澤','海德格':'馬丁·海德格',
+  '沙特':'尚-保羅·沙特','列維納斯':'伊曼紐爾·列維納斯','呂格爾':'保羅·呂格爾',
+  '德勒茲':'吉爾·德勒茲','柏格森':'亨利·柏格森','德希達':'雅克·德希達',
+  '傅柯':'米歇爾·傅柯','羅蘭巴特':'羅蘭·巴特','阿岡本':'喬治歐·阿岡本',
+  '李歐塔':'讓-弗朗索瓦·李歐塔','布希亞':'讓·布希亞','塞荷':'米歇爾·塞荷',
+  '韓炳哲':'韓炳哲','雷克維茲':'安德烈亞斯·雷克維茨','德波':'居伊·德波',
+  '巴迪歐':'阿蘭·巴迪歐','齊澤克':'斯拉沃熱·齊澤克','巴特勒':'茱迪斯·巴特勒',
+  '布魯諾拉圖':'布魯諾·拉圖','葛蘭西':'安東尼奧·葛蘭西','阿圖塞':'路易·阿圖塞',
+  '哈維':'大衛·哈維','拉克勞':'恩尼斯托·拉克勞','墨菲':'尚塔爾·墨菲',
+  '巴巴':'霍米·巴巴','法農':'法蘭茲·法農','薩依德':'愛德華·薩依德',
+  '史碧娃克':'佳亞特里·史碧娃克','查克拉巴提':'迪佩什·查克拉巴提',
+  '鄂蘭':'漢娜·鄂蘭','克拉斯特':'皮耶·克拉斯特',
+  '米蘭達・弗里克':'米蘭達·弗里克','克里斯蒂・多特森':'克里斯蒂·多特森',
+  '阮致清':'阮致清','荷西・梅迪納':'荷西·梅迪納','雅克・拉岡':'雅克·拉岡',
+  '阿里耶拉・艾莎・阿祖萊':'阿里耶拉·艾莎·阿祖萊'
+};
+const PHIL_EXTRA_ALIASES = {
+  '史碧娃克':['史畢瓦克','Spivak'],
+  '布魯諾拉圖':['布魯諾·拉圖'],
+  '羅蘭巴特':['羅蘭·巴特'],
+  '阿里耶拉・艾莎・阿祖萊':['Ariella Aisha Azoulay','Ariella Aïsha Azoulay'],
+  '雅克・拉岡':['Jacques Lacan'],
+  '荷西・梅迪納':['Jose Medina','José Medina'],
+  '阮致清':['C. Thi Nguyen'],
+  '克里斯蒂・多特森':['Kristie Dotson'],
+  '米蘭達・弗里克':['Miranda Fricker']
+};
+const OTHER_PERSON_ALIASES = {
+  '尼采':'弗里德里希·尼采','弗里德里希·尼采':'弗里德里希·尼采',
+  '瓜塔里':'菲利克斯·瓜塔里','史賓諾莎':'巴魯赫·史賓諾莎',
+  '哈金':'伊恩·哈金','布迪厄':'皮耶·布迪厄','洪席耶':'雅克·洪席耶',
+  '朗西埃':'雅克·洪席耶','費雪':'馬克·費雪','班雅明':'華特·班雅明',
+  '哈道特':'皮耶·哈道特','奎因':'W.V.O. 奎因','荷馬':'荷馬'
+};
+// 自由文字欄的明確思想來源歸屬。空陣列代表這張卡沒有適合的人物標籤。
+const PHILOSOPHER_TAG_OVERRIDES = {
+  '本次對話延伸自 Warlpiri 原住民媒體實踐與原住民數據主權運動':['瓦爾皮里人（Warlpiri）'],
+  '本次對話延伸應用史畢瓦克與薩依德':['佳亞特里·史碧娃克','愛德華·薩依德'],
+  '本次對話延伸應用布迪厄':['皮耶·布迪厄'],
+  '本次對話延伸應用布迪厄與洪席耶':['皮耶·布迪厄','雅克·洪席耶'],
+  '本次對話延伸應用朗西埃「部分中無部分者」':['雅克·洪席耶'],
+  '本次對話延伸應用薩依德知識型地理，德希達檔案理論':['愛德華·薩依德','雅克·德希達'],
+  '本次對話原創分析':[],
+  '本次對話原創分析，延伸自哈道特精神操練概念與布迪厄慣習理論':['皮耶·哈道特','皮耶·布迪厄'],
+  '本次對話原創分析（延伸自傅柯與德希達的檔案批判）':['米歇爾·傅柯','雅克·德希達'],
+  '本次對話原創分析（延伸自德希達檔案理論）':['雅克·德希達'],
+  '本次對話原創批判分析，延伸德勒茲並對照呂格爾':['吉爾·德勒茲','保羅·呂格爾'],
+  '本次對話原創延伸，應用德勒茲症狀學方法於柏拉圖《斐德若篇》':['吉爾·德勒茲'],
+  '本次對話原創提問，Claude以德勒茲框架回應':['吉爾·德勒茲'],
+  '本次對話原創對照，延伸德勒茲表面哲學與禪宗公案傳統':['吉爾·德勒茲'],
+  '本次對話原創對讀，延伸德勒茲表面哲學與禪宗公案傳統':['吉爾·德勒茲'],
+  '本次對話原創綜合，延伸自合作社與互助網絡的政治經濟學傳統':[],
+  '本次對話對葛蘭西文化霸權的精煉應用':['安東尼奧·葛蘭西'],
+  'Brandon 本人提出，Claude 以傅柯生產性權力延伸闡述':['米歇爾·傅柯'],
+  'Brandon 本人提出，Claude 延伸自史畢瓦克':['佳亞特里·史碧娃克'],
+  '伊曼紐爾·列維納斯、德勒茲與瓜塔里':['伊曼紐爾·列維納斯','吉爾·德勒茲','菲利克斯·瓜塔里'],
+  '吉爾·德勒茲，延伸安提斯泰尼的邊界位移':['吉爾·德勒茲'],
+  '吉爾·德勒茲，延伸克律西波斯斯多噶物理學':['吉爾·德勒茲'],
+  '吉爾·德勒茲，延伸康德先驗理想與先驗統覺':['吉爾·德勒茲'],
+  '吉爾·德勒茲，延伸斯多噶「可表達內容」(lekta) 理論':['吉爾·德勒茲'],
+  '吉爾·德勒茲，梳理柏拉圖、亞里斯多德、普羅提諾斯、斯多噶的歷史脈絡':['吉爾·德勒茲']
+};
+function normalizePersonToken(s){
+  return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+    .replace(/[\s·・.\-–—'’]/g,'');
+}
+const PHILOSOPHER_REGISTRY = PHILOSOPHERS.map(p => ({
+  id:p.id,
+  label:PHIL_DISPLAY_NAMES[p.name_zh] || p.name_zh,
+  aliases:[p.name_zh,p.name_orig,PHIL_DISPLAY_NAMES[p.name_zh],...(PHIL_EXTRA_ALIASES[p.name_zh]||[])].filter(Boolean)
+}));
+const CORE_PHILOSOPHER_LABELS = new Set(PHILOSOPHER_REGISTRY.map(p=>p.label));
+
+function splitPeopleAtTopLevel(raw){
+  const out=[]; let buf=''; let depth=0;
+  for(const ch of raw||''){
+    if(ch==='（'||ch==='(') depth++;
+    if(ch==='）'||ch===')') depth=Math.max(0,depth-1);
+    if(depth===0 && /[、；，]/.test(ch)){
+      if(buf.trim()) out.push(buf.trim());
+      buf='';
+    } else buf+=ch;
+  }
+  if(buf.trim()) out.push(buf.trim());
+  return out;
+}
+
+function philosopherTags(cardOrName){
+  const raw = typeof cardOrName === 'string' ? cardOrName : (cardOrName?.philosopher || '');
+  if(Object.prototype.hasOwnProperty.call(PHILOSOPHER_TAG_OVERRIDES, raw)){
+    return [...new Set(PHILOSOPHER_TAG_OVERRIDES[raw])];
+  }
+  const normalizedRaw = normalizePersonToken(raw);
+  const tags=[];
+
+  // 先收斂所有已有哲學家主頁的異名與多人組合。
+  PHILOSOPHER_REGISTRY.forEach(person => {
+    if(person.aliases.some(alias => normalizedRaw.includes(normalizePersonToken(alias)))) tags.push(person.label);
+  });
+  // 沒有主頁但反覆以簡稱出現的人物也統一名稱。
+  Object.entries(OTHER_PERSON_ALIASES).forEach(([alias,label]) => {
+    if(normalizedRaw.includes(normalizePersonToken(alias))) tags.push(label);
+  });
+
+  // 對一般「中文名（外文名）」或多人欄位做保守拆分；敘事性來源欄不自行製造標籤。
+  const narrative = /^(本次對話|Brandon|Claude|跨傳統|跨學者|古希臘宗教倫理|受.+影響的學者)/.test(raw.trim());
+  if(!narrative){
+    splitPeopleAtTopLevel(raw).forEach(clause => {
+      clause = clause.replace(/（[\s\S]*$/,'').replace(/\([\s\S]*$/,'').trim();
+      clause.split(/(?:與|&)/).forEach(part => {
+        let candidate = part.trim().replace(/^早期/,'').replace(/《[\s\S]*$/,'');
+        if(!candidate || /本次對話|Brandon|Claude|跨傳統|跨學者|古希臘宗教倫理|受.+影響的學者|當代新柏拉圖主義者/.test(candidate)) return;
+        if(/^(延伸|應用|梳理)|原創|分析|對讀|對照|框架|方法|歷史脈絡|傳統$|學者$|理論$|運動$|統覺$/.test(candidate)) return;
+        const alreadyKnown = PHILOSOPHER_REGISTRY.some(person =>
+          person.aliases.some(alias => normalizePersonToken(candidate).includes(normalizePersonToken(alias)))
+        );
+        if(alreadyKnown) return;
+        const aliasLabel = OTHER_PERSON_ALIASES[candidate];
+        if(aliasLabel) candidate=aliasLabel;
+        if(candidate.length>0 && candidate.length<=35) tags.push(candidate.replace(/・/g,'·'));
+      });
+    });
+  }
+  return [...new Set(tags)];
+}
+
 function timeAgo(ts){
   if(!ts) return '尚未讀過';
   const diffMs = Date.now() - Number(ts);
@@ -11955,7 +12091,7 @@ function relHtml(rel, ownerId){
 
 function cardMatches(card){
   const f = state.filters;
-  if(f.philosopher && philKey(card.philosopher) !== f.philosopher) return false;
+  if(f.philosopher && !philosopherTags(card).includes(f.philosopher)) return false;
   if(f.topic && !card.topics.includes(f.topic)) return false;
   if(f.tradition && !card.traditions.includes(f.tradition)) return false;
   if(f.status){
@@ -12054,7 +12190,8 @@ function philMatches(phil){
 function relatedCards(philId){
   const phil = PHILOSOPHERS.find(p=>p.id===philId);
   if(!phil) return [];
-  return CARDS.filter(c => c.philosopher.includes(phil.name_zh));
+  const canonical = PHILOSOPHER_REGISTRY.find(p=>p.id===philId)?.label;
+  return canonical ? CARDS.filter(c => philosopherTags(c).includes(canonical)) : [];
 }
 
 function philHtml(phil){
@@ -12116,7 +12253,12 @@ function activeFilterCount(){
 function buildFilterModal(){
   const body = document.getElementById('filterModalBody');
   if(state.tab === 'cards'){
-    const philCounts = {}; CARDS.forEach(c => { const k = philKey(c.philosopher); philCounts[k]=(philCounts[k]||0)+1; });
+    const philCounts = {};
+    CARDS.forEach(c => philosopherTags(c).forEach(k => { philCounts[k]=(philCounts[k]||0)+1; }));
+    const corePhilCounts = {}, otherPhilCounts = {};
+    Object.entries(philCounts).forEach(([name,count]) => {
+      (CORE_PHILOSOPHER_LABELS.has(name) ? corePhilCounts : otherPhilCounts)[name]=count;
+    });
     const topicCounts = {}; CARDS.forEach(c => c.topics.forEach(t => topicCounts[t]=(topicCounts[t]||0)+1));
     const tradCounts = {}; CARDS.forEach(c => c.traditions.forEach(t => tradCounts[t]=(tradCounts[t]||0)+1));
     const statusCounts = {'未複習':0,'已重述':0,'需重讀':0};
@@ -12134,7 +12276,12 @@ function buildFilterModal(){
 
     body.innerHTML = `
       <h2>篩選</h2>
-      ${section('哲學家', 'philosopher', philCounts)}
+      ${section('哲學家', 'philosopher', corePhilCounts)}
+      ${Object.keys(otherPhilCounts).length ? `
+        <details class="filter-more">
+          <summary>其他人物（${Object.keys(otherPhilCounts).length}）</summary>
+          ${section('沒有獨立哲學家主頁的人物', 'philosopher', otherPhilCounts)}
+        </details>` : ''}
       ${section('主題', 'topic', topicCounts)}
       ${section('傳統', 'tradition', tradCounts)}
       ${section('狀態', 'status', statusCounts)}
@@ -12221,6 +12368,41 @@ document.getElementById('collapseAllBtn').addEventListener('click', () => {
   const items = state.tab === 'cards' ? CARDS : PHILOSOPHERS;
   items.forEach(i => { state.open[i.id] = false; });
   render();
+});
+
+// ---------- random review ----------
+document.getElementById('randomReviewBtn').addEventListener('click', () => {
+  const allItems = state.tab === 'cards' ? CARDS : PHILOSOPHERS;
+  const visibleItems = state.tab === 'cards'
+    ? CARDS.filter(cardMatches)
+    : PHILOSOPHERS.filter(philMatches);
+  const btn = document.getElementById('randomReviewBtn');
+  if(visibleItems.length === 0){
+    const original = btn.textContent;
+    btn.textContent = '沒有可選項目';
+    setTimeout(() => { btn.textContent = original; }, 1200);
+    return;
+  }
+
+  const previousId = state.lastRandom[state.tab];
+  const pool = visibleItems.length > 1
+    ? visibleItems.filter(item => item.id !== previousId)
+    : visibleItems;
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  allItems.forEach(item => { state.open[item.id] = false; });
+  state.open[target.id] = true;
+  state.lastRandom[state.tab] = target.id;
+  render();
+
+  requestAnimationFrame(() => {
+    const el = document.getElementById(target.id);
+    if(!el) return;
+    if(typeof el.scrollIntoView === 'function'){
+      el.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 1200);
+  });
 });
 
 // ---------- back navigation ----------
