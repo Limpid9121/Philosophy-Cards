@@ -12481,16 +12481,6 @@ function render(){
 const listEl = document.getElementById('list');
 
 listEl.addEventListener('click', e => {
-  // 展開／收合：只切 class，不重繪
-  const head = e.target.closest('[data-toggle]');
-  if(head){
-    const id = head.dataset.toggle;
-    const cardEl = document.getElementById(id);
-    state.open[id] = !state.open[id];
-    if(cardEl) cardEl.classList.toggle('open', state.open[id]);
-    return;
-  }
-
   // 概念卡跳轉
   const jumpEl = e.target.closest('[data-jump]');
   if(jumpEl){ e.stopPropagation(); jumpTo(jumpEl.dataset.jump, 'cards'); return; }
@@ -12502,6 +12492,16 @@ listEl.addEventListener('click', e => {
   // 哲學家主頁裡「相關概念卡」跳轉
   const jumpToCardEl = e.target.closest('[data-jump-to-card]');
   if(jumpToCardEl){ e.stopPropagation(); jumpTo(jumpToCardEl.dataset.jumpToCard, 'cards'); return; }
+
+  // 展開／收合：連結跳轉優先，只有標題區的非連結位置才切換卡片。
+  const head = e.target.closest('[data-toggle]');
+  if(head){
+    const id = head.dataset.toggle;
+    const cardEl = document.getElementById(id);
+    state.open[id] = !state.open[id];
+    if(cardEl) cardEl.classList.toggle('open', state.open[id]);
+    return;
+  }
 
   // 複習狀態按鈕：局部更新同一組按鈕的 active 樣式 + 卡片右上角時間戳
   const statusBtn = e.target.closest('[data-status]');
