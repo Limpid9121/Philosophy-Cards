@@ -166,6 +166,7 @@
   </div>
   <div class="action-row">
     <button class="action-btn" id="filterBtn">篩選<span class="badge" id="filterBadge" style="display:none;">0</span></button>
+    <button class="action-btn" id="randomBtn">✦ 隨機瀏覽</button>
     <button class="action-btn" id="reviewBtn">今日複習</button>
     <button class="action-btn" id="collapseAllBtn">全部收合</button>
     <button class="action-btn" id="backBtn" style="display:none;">← 返回</button>
@@ -731,6 +732,18 @@ function jumpTo(targetId, targetTab){
   });
 }
 
+// ---------- random browse ----------
+let lastRandomCardId = null;
+document.getElementById('randomBtn').addEventListener('click', () => {
+  const pool = CARDS.length > 1 && lastRandomCardId
+    ? CARDS.filter(card => card.id !== lastRandomCardId)
+    : CARDS;
+  if(pool.length === 0) return;
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  lastRandomCardId = target.id;
+  jumpTo(target.id, 'cards');
+});
+
 // ---------- render ----------
 function render(){
   updateFilterUI();
@@ -938,4 +951,3 @@ render();
 </script>
 </body>
 </html>
-
